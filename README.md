@@ -6,7 +6,7 @@ DNS provider api call is handled by [libdns](https://github.com/libdns/libdns)
 
 The server is intended to be used with the [cert-manager](https://github.com/cert-manager/cert-manager) project.
 
-# ⚠ Warn ⚠
+# ⚠ Warn
 
 Because my use case, there is no need to issue a valid cert for the proxy server, I just use a self-signed cert, thus
 the server only provide a http endpoint.
@@ -17,10 +17,10 @@ It's recommend to use behind a reverse proxy with rate limit or maybe client cer
 
 # tl;dr
 
-- write a [config file](#server-config) for the server
-- write a config file for the webhook
-- run the server
-- helm install the webhook
+- write a [server config file](#example-server-config)
+- [run the server](#acmeproxy-server)
+- [install the webhook](#install-webhook)
+- [create an issuer](#config-an-example-issuer) in your cluster
 
 # Why
 
@@ -39,17 +39,31 @@ What I have:
 
 # Config and Run
 
-### server config
+## acmeproxy server
 
-This server config example is for using with cloudflare
+the image hosted on `ghcr.io`, config file location can be changed with env variable `CONFIG_PATH` pointing to a `.yaml`
+config file, or use default config path `/config/config.yaml`
 
-For a list of supported dns provider, check [libdns](https://github.com/libdns)
+```shell
+docker pull ghct.io/arnesacnussem/cert-manager-proxy/acmeproxy:latest
+```
 
+```shell
+docker run -dp 8088:8088 \
+  -v "$(pwd)/acmeproxy-config":/config \
+  ghct.io/arnesacnussem/cert-manager-proxy/acmeproxy:latest
+```
+
+### example server config
+
+For a list of supported dns provider, check [libdns](https://github.com/libdns).
 Some dns provider is not include,
 check [update-libdns-provider-list.go](./update-libdns-provider-list.go) for more details
 
 ```yaml
 # server listening address
+# this directly pass to gin
+# see https://pkg.go.dev/github.com/gin-gonic/gin#Engine.Run for more detail
 server: ip:port
 
 # List of providers
@@ -79,7 +93,18 @@ users:
 
 ### webhook config
 
-#### example issuer
+#### install webhook
+
+```shell
+helm upgrade --install -n cert-manager acmeproxy-webhook \
+  --repo https://arnesacnussem.github.io/cert-manager-proxy/ acmeproxy-webhook \
+  --set groupName=example.com \
+  --set image.tag=latest
+```
+
+#### config an example issuer
+
+by simply write your secret in it
 
 ```yaml
 apiVersion: cert-manager.io/v1
@@ -107,7 +132,8 @@ spec:
               token: example
 ```
 
-or use secret to store auth info
+or use a secret
+
 ```yaml
 apiVersion: v1
 kind: Secret
@@ -117,7 +143,7 @@ type: kubernetes.io/basic-auth
 stringData:
   username: "example"
   password: "example"
-  
+
 ---
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
