@@ -7,6 +7,9 @@ on:
 
 jobs:
   acmeproxy:
+    permissions:
+      contents: read
+      packages: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -39,6 +42,9 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   webhook:
+    permissions:
+      contents: read
+      packages: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
