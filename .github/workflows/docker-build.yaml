@@ -62,7 +62,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }}/acmeproxy
+          images: ghcr.io/${{ github.repository }}/webhook
 
       - name: Setup buildx
         uses: docker/setup-buildx-action@v3
