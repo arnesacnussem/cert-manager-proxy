@@ -1,0 +1,12 @@
+apiVersion: v1
+entries:
+  acmeproxy-webhook:
+  - apiVersion: v1
+    created: "2024-09-22T22:03:18.970669325Z"
+    description: acmeproxy-webhook
+    digest: 6e59ee19f73093c493a00a0d4a851b6817acf634ac5decbf343fb2680f3d112f
+    name: acmeproxy-webhook
+    urls:
+    - https://github.com/arnesacnussem/cert-manager-proxy/releases/download/acmeproxy-webhook-0.1.0/acmeproxy-webhook-0.1.0.tgz
+    version: 0.1.0
+generated: "2024-09-22T22:03:18.970680094Z"
