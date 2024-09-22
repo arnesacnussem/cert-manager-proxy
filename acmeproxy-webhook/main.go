@@ -18,7 +18,5 @@ func main() {
 	// You can register multiple DNS provider implementations with a single
 	// webhook, where the Name() method will be used to disambiguate between
 	// the different implementations.
-	cmd.RunWebhookServer(GroupName,
-		&acmeproxy.Solver{},
-	)
+	cmd.RunWebhookServer(GroupName, &acmeproxy.Solver{})
 }

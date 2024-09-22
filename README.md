@@ -106,3 +106,44 @@ spec:
               user: example
               token: example
 ```
+
+or use secret to store auth info
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: example-issuer-secret
+type: kubernetes.io/basic-auth
+stringData:
+  username: "example"
+  password: "example"
+  
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: example-issuer
+spec:
+  acme:
+    # You must replace this email address with your own.
+    # Let's Encrypt will use this to contact you about expiring
+    # certificates, and issues related to your account.
+    email: user@example.com
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      # Secret resource that will be used to store the account's private key.
+      name: example-issuer-account-key
+    solvers:
+      - dns01:
+          webhook:
+            groupName: example.com # groupName must match the one configured on webhook deployment (see Helm chart's values) !
+            solverName: acmeproxy
+            config:
+              server: https://acmeproxy.example.com
+              userSecretRef:
+                name: example-issuer-secret
+                key: username
+              tokenSecretRef:
+                name: example-issuer-secret
+                key: token
+```

@@ -4,14 +4,17 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	cmmetav1 "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	"github.com/pkg/errors"
 	"net/http"
 )
 
 type DNSProviderConfig struct {
-	User   string `json:"user"`
-	Token  string `json:"token"`
-	Server string `json:"server"`
+	User           string                     `json:"user"`
+	Token          string                     `json:"token"`
+	Server         string                     `json:"server"`
+	UserSecretRef  cmmetav1.SecretKeySelector `json:"userSecretRef"`
+	TokenSecretRef cmmetav1.SecretKeySelector `json:"tokenSecretRef"`
 }
 
 type request struct {
@@ -21,19 +24,7 @@ type request struct {
 
 type DNSClient struct {
 	client *http.Client
-	cfg    DNSProviderConfig
-}
-
-func NewACMEProxyDNSProvider(jsonConfig []byte) (*DNSClient, error) {
-	config := DNSProviderConfig{}
-	err := json.Unmarshal(jsonConfig, &config)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not unmarshal config json")
-	}
-	return &DNSClient{
-		client: &http.Client{},
-		cfg:    config,
-	}, nil
+	cfg    *DNSProviderConfig
 }
 
 // Present a challenge to the DNS provider. This will add a TXT record that the Let's Encrypt

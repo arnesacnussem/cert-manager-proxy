@@ -1,13 +1,21 @@
 package acmeproxy
 
 import (
-	extapi "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"context"
+	"encoding/json"
+	cmmetav1 "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
+	"github.com/pkg/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"net/http"
 
 	"github.com/cert-manager/cert-manager/pkg/acme/webhook/apis/acme/v1alpha1"
 )
 
-type Solver struct{}
+type Solver struct {
+	kubeClient *kubernetes.Clientset
+}
 
 func (c *Solver) Name() string {
 	return "acmeproxy"
@@ -19,7 +27,7 @@ func (c *Solver) Name() string {
 // cert-manager itself will later perform a self check to ensure that the
 // solver has correctly configured the DNS provider.
 func (c *Solver) Present(ch *v1alpha1.ChallengeRequest) error {
-	client, err := newClient(ch.Config)
+	client, err := c.getClient(ch)
 	if err != nil {
 		return err
 	}
@@ -38,7 +46,7 @@ func (c *Solver) Present(ch *v1alpha1.ChallengeRequest) error {
 // This is in order to facilitate multiple DNS validations for the same domain
 // concurrently.
 func (c *Solver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
-	client, err := newClient(ch.Config)
+	client, err := c.getClient(ch)
 	if err != nil {
 		return err
 	}
@@ -51,25 +59,55 @@ func (c *Solver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
 }
 
 func (c *Solver) Initialize(kubeClientConfig *rest.Config, stopCh <-chan struct{}) error {
-	///// UNCOMMENT THE BELOW CODE TO MAKE A KUBERNETES CLIENTSET AVAILABLE TO
-	///// YOUR CUSTOM DNS PROVIDER
+	cl, err := kubernetes.NewForConfig(kubeClientConfig)
+	if err != nil {
+		return err
+	}
 
-	//cl, err := kubernetes.NewForConfig(kubeClientConfig)
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//c.client = cl
-
-	///// END OF CODE TO MAKE KUBERNETES CLIENTSET AVAILABLE
+	c.kubeClient = cl
 	return nil
 }
 
-func newClient(cfgJSON *extapi.JSON) (*DNSClient, error) {
-	client, err := NewACMEProxyDNSProvider(cfgJSON.Raw)
+func (c *Solver) getSecretVal(selector cmmetav1.SecretKeySelector, ns string) ([]byte, error) {
+	secret, err := c.kubeClient.CoreV1().Secrets(ns).Get(context.TODO(), selector.Name, metav1.GetOptions{})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed to load secret %s", ns+"/"+selector.Name)
 	}
 
+	if data, ok := secret.Data[selector.Key]; ok {
+		return data, nil
+	}
+
+	return nil, errors.Errorf("no key %q in secret %q", selector.Key, ns+"/"+selector.Name)
+}
+
+func (c *Solver) getClient(ch *v1alpha1.ChallengeRequest) (*DNSClient, error) {
+	config := &DNSProviderConfig{}
+	err := json.Unmarshal(ch.Config.Raw, &config)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not unmarshal config json")
+	}
+
+	if &config.TokenSecretRef != nil && &config.UserSecretRef != nil {
+		data, err := c.getSecretVal(config.TokenSecretRef, ch.ResourceNamespace)
+		if err != nil {
+			return nil, err
+		}
+
+		config.Token = string(data)
+	}
+
+	if &config.UserSecretRef != nil {
+		data, err := c.getSecretVal(config.UserSecretRef, ch.ResourceNamespace)
+		if err != nil {
+			return nil, err
+		}
+		config.User = string(data)
+	}
+
+	client := &DNSClient{
+		client: &http.Client{},
+		cfg:    config,
+	}
 	return client, nil
 }
