@@ -7,9 +7,7 @@ import (
 	"github.com/cert-manager/cert-manager/pkg/acme/webhook/apis/acme/v1alpha1"
 )
 
-type Solver struct {
-	provider *DNSClient
-}
+type Solver struct{}
 
 func (c *Solver) Name() string {
 	return "acmeproxy"
