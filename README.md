@@ -86,7 +86,7 @@ providers:
 users:
   - name: user
     token: token123
-    allowedZone:
+    allowedZones:
       - foo.example.com
       - bar.another.com
 ```
