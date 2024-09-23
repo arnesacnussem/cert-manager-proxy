@@ -1,4 +1,4 @@
-package main
+package proxy
 
 import (
 	"acmeproxy/dns"
@@ -23,23 +23,23 @@ type Provider struct {
 	provider dns.Provider
 }
 
-func NewProviderFromSpec(spec DNSProvider) (*Provider, error) {
+func (d *DNSProvider) ToProvider() (*Provider, error) {
 	// setup env for config
-	logrus.Infof("creating provider [%s]", &spec)
+	logrus.Infof("creating provider %q", d)
 
-	cfgJson, err := json.Marshal(spec.Config)
+	cfgJson, err := json.Marshal(d.Config)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to marshal config for [%s]", &spec)
+		return nil, errors.Wrapf(err, "unable to marshal config for %q", d)
 	}
 
-	dnsProvider := dns.NewProviderByNameWithConfig(spec.Provider, cfgJson)
+	dnsProvider := dns.NewProviderByNameWithConfig(d.Provider, cfgJson)
 	if dnsProvider == nil {
-		return nil, fmt.Errorf("unable to obtain config for [%s]", &spec)
+		return nil, fmt.Errorf("unable to obtain config for %q", d)
 	}
 
 	return &Provider{
-		zone:     spec.Zone,
-		name:     spec.Provider,
+		zone:     d.Zone,
+		name:     d.Provider,
 		provider: dnsProvider,
 	}, nil
 }
@@ -54,7 +54,7 @@ func (p *Provider) Present(ctx context.Context, record libdns.Record) ([]libdns.
 func (p *Provider) CleanUp(ctx context.Context, record libdns.Record) ([]libdns.Record, error) {
 	records, err := p.provider.GetRecords(ctx, p.zone)
 	if err != nil {
-		return nil, errors.Wrapf(err, "[%s] could not get records", p)
+		return nil, errors.Wrapf(err, "%q could not get records", p)
 	}
 
 	// some provider not returning fqdn, but a name, e.g. cloudflare
@@ -77,11 +77,11 @@ func (p *Provider) CleanUp(ctx context.Context, record libdns.Record) ([]libdns.
 		}
 	}
 	if recordToDelete == nil {
-		return nil, fmt.Errorf("[%s] could not find record to delete", p)
+		return nil, fmt.Errorf("%q could not find record to delete", p)
 	}
 	records, err = p.provider.DeleteRecords(ctx, p.zone, []libdns.Record{*recordToDelete})
 	if err != nil {
-		return nil, errors.Wrapf(err, "[%s] could not delete record", p)
+		return nil, errors.Wrapf(err, "%q could not delete record", p)
 	}
 	return records, nil
 

@@ -13,4 +13,5 @@ FROM alpine:${alpine}
 COPY --from=builder /build/acmeproxy .
 
 ENV CONFIG_PATH="/config/config.yaml"
+ENV GIN_MODE=release
 CMD ["/acmeproxy"]

@@ -89,6 +89,7 @@ users:
     allowedZones:
       - foo.example.com
       - bar.another.com
+      - regex: .+\.example\.com
 ```
 
 ### webhook config
