@@ -30,6 +30,7 @@ What I need:
 - Not expose my DNS provider API token that have much larger scope than a sub-zone I want to allow
 - I need a wildcard certificate, but with Let's Encrypt, only DNS01 challenge is supported
 - One user can use multiple dns provider
+- Just found I also need to match a request by regex :)
 
 What I have:
 
