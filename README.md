@@ -64,6 +64,8 @@ check [update-libdns-provider-list.go](./update-libdns-provider-list.go) for mor
 # server listening address
 # this directly pass to gin
 # see https://pkg.go.dev/github.com/gin-gonic/gin#Engine.Run for more detail
+# e.g., server: 0.0.0.0:8088
+# e.g., server: :8088
 server: ip:port
 
 # List of providers
@@ -87,9 +89,15 @@ users:
   - name: user
     token: token123
     allowedZones:
-      - foo.example.com
-      - bar.another.com
-      - regex: .+\.example\.com
+      # match zone by suffix
+      - zone: foo.example.com # match *.foo.example.com or foo.example.com
+      - zone: bar.another.com # match *.bar.another.com or bar.another.com
+
+      # or use regex to match
+      # be careful when using a regex, the code just run "regexp.Match"
+      - regex: ^.+-foo.bar.com$ # match *-foo.bar.com
+        # this time, the zone must be one in provider.zone
+        zone: example.com
 ```
 
 ### webhook config
