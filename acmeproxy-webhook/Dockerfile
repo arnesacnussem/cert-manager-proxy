@@ -3,10 +3,6 @@ FROM golang:1.22-alpine3.19 AS build
 RUN apk add --no-cache git
 
 WORKDIR /workspace
-
-COPY go.mod go.sum ./
-RUN go mod download
-
 COPY . .
 RUN CGO_ENABLED=0 go build -o webhook -ldflags '-w -extldflags "-static"' .
 
