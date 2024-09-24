@@ -88,21 +88,24 @@ func (c *Solver) getClient(ch *v1alpha1.ChallengeRequest) (*DNSClient, error) {
 		return nil, errors.Wrap(err, "could not unmarshal config json")
 	}
 
-	if &config.TokenSecretRef != nil && &config.UserSecretRef != nil {
+	if config.Token == "" {
 		data, err := c.getSecretVal(config.TokenSecretRef, ch.ResourceNamespace)
 		if err != nil {
 			return nil, err
 		}
-
 		config.Token = string(data)
 	}
 
-	if &config.UserSecretRef != nil {
+	if config.User == "" {
 		data, err := c.getSecretVal(config.UserSecretRef, ch.ResourceNamespace)
 		if err != nil {
 			return nil, err
 		}
 		config.User = string(data)
+	}
+
+	if config.User == "" || config.Token == "" || config.Server == "" {
+		return nil, errors.New("user, token, and server are required")
 	}
 
 	client := &DNSClient{
