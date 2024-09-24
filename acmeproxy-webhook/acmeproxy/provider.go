@@ -6,6 +6,7 @@ import (
 	"fmt"
 	cmmetav1 "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	"github.com/pkg/errors"
+	"log"
 	"net/http"
 )
 
@@ -49,12 +50,15 @@ func (p *DNSClient) cleanup(fqdn, value string) error {
 }
 
 func (p *DNSClient) _request(action string, request *request) error {
+	log.Printf("[Provider]: action=%s fqdn=%q value=%q", action, request.FQDN, request.Value)
 	body, err := json.Marshal(request)
 	if err != nil {
 		return errors.Wrap(err, "could not marshal request")
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/%s", p.cfg.Server, action), bytes.NewBuffer(body))
+	url := fmt.Sprintf("%s/%s", p.cfg.Server, action)
+	log.Printf("[Provider]: POST %s", url)
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
 	if err != nil {
 		return errors.Wrap(err, "could not create request")
 	}
@@ -67,6 +71,7 @@ func (p *DNSClient) _request(action string, request *request) error {
 
 	//goland:noinspection GoUnhandledErrorResult
 	defer resp.Body.Close()
+	log.Printf("[Provider]: %q %s", resp.Status, resp.Body)
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("could finish request: api returned %s %s", resp.Status, resp.Body)
 	}
