@@ -1,4 +1,6 @@
 # cert-manager proxy
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Farnesacnussem%2Fcert-manager-proxy.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Farnesacnussem%2Fcert-manager-proxy?ref=badge_shield)
+
 
 This project provides a proxy server and a cert-manager webhook to proxy ACME DNS01 challenges.
 
@@ -183,3 +185,6 @@ spec:
                 name: example-issuer-secret
                 key: token
 ```
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Farnesacnussem%2Fcert-manager-proxy.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Farnesacnussem%2Fcert-manager-proxy?ref=badge_large)
