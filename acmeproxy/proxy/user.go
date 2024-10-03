@@ -62,7 +62,7 @@ func (u *User) init(providerZoneMap map[string]*Provider) error {
 			}
 		} else {
 			for z, provider := range providerZoneMap {
-				if strings.HasSuffix(zone.Zone, "."+z) {
+				if zone.Zone == z || strings.HasSuffix(zone.Zone, "."+z) {
 					if zone.provider != nil {
 						return fmt.Errorf("zone have multiple provider match: %q and %q", zone.provider, provider)
 					} else {
